@@ -1,0 +1,78 @@
+const junctions = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "S", "L" ] //seznam krizovatek
+
+let resultsArray = new Map();   //mapa (krizovatka, [vzdalenost, predchoziNode])
+
+const routes = [
+  ["S" , "C", 3],
+  ["S" , "A", 7],
+  ["S" , "B", 2],
+  ["A" , "B", 3],
+  ["A" , "D", 4],
+  ["B" , "D", 4],
+  ["B" , "H", 1],
+  ["H" , "F", 3],
+  ["D" , "F", 5],
+  ["H" , "G", 2],
+  ["G" , "E", 2],
+  ["C" , "L", 2],
+  ["L" , "I", 4],
+  ["L" , "J", 4],
+  ["J" , "K", 4],
+  ["I" , "K", 4],
+  ["K" , "E", 5],
+  ["E" , "G", 2],
+]; //narocnost cesty mezi krizovatkami
+
+let graph = new Map();
+
+let queue = [];
+
+function addNode(junction) {
+  resultsArray.set(junction, [Infinity, null]); //set default value - all junctions are inaccessible
+  graph.set(junction, new Map()); //graf - krizovatka a mapa cest kam lze jit + cas
+}
+
+//pridat edge mezi obema (undirected)
+function addEdge(startJunction, endJunction, weight){
+  graph.get(startJunction).set(endJunction,weight);
+  graph.get(endJunction).set(startJunction, weight);
+}
+
+junctions.forEach(addNode);
+routes.forEach(route => addEdge(...route)) //ES6 spread operator - kazdy ze 3 argumentu z routes zvlast
+
+//Funkce pro zobrazeni nejrychlejsi trasy - je volana zevnitr fce findPath
+function returnPath(start, end) {
+  let path = [];
+  path.unshift(resultsArray.get(end)[1]);
+  while (path[0] !== start) {
+    path.unshift(resultsArray.get(path[0])[1])
+  }
+  console.log("Your route is " + path.join(" -> ") + " -> " + end);
+}
+
+function findPath(start, end) {
+  let visited = new Set();  //set - lze vlozit jen unikatni keys
+  queue.push(start);
+  resultsArray.set(start, [0, null]);
+
+  while (queue.length > 0 ) {
+    const junction = queue.shift();
+    visited.add(junction);
+    const paths = graph.get(junction);
+    for(let path of paths)   {
+      const before = resultsArray.get(path[0])[0];
+      const after = path[1] + resultsArray.get(junction)[0];
+      if (after < before) {
+        resultsArray.set(path[0], [after,junction])
+      }
+     if(!visited.has(path[0])) {
+       queue.push(path[0]);
+     }
+    }
+  }
+  returnPath(start, end);
+  console.log("Time consumption is " + resultsArray.get(end)[0] + " hrs");
+}
+
+findPath("S", "G");
