@@ -25,7 +25,44 @@ const routes = [
 
 let graph = new Map();
 
-let queue = [];
+function priorityQueue() {
+   let queue = [];
+
+   this.print = function() {
+    console.log(queue);
+    return(queue)
+  }
+  this.push = function(junction, priority) {
+    if(this.isEmpty()) {
+      queue.push([junction, priority]);
+    } else {
+      for (let i = 0; i < queue.length; i++) {
+        let added = false;
+        if (priority < queue[i][1]) {
+          added = true
+          queue.splice(i, 0, [junction, priority]);
+          break;
+        }
+        if (!added) {
+          queue.push([junction, priority]);
+          break;
+        }
+      }
+    }
+  }
+  this.shift = function() {
+    let junction = queue.shift();
+    return junction[0];
+  }
+  this.isEmpty = function() {
+    return (queue.length === 0);
+  }
+  this.length = function() {
+    return queue.length;
+  }
+}
+
+let queue = new priorityQueue();
 
 function addNode(junction) {
   resultsArray.set(junction, [Infinity, null]); //set default value - all junctions are inaccessible
@@ -53,21 +90,25 @@ function returnPath(start, end) {
 
 function findPath(start, end) {
   let visited = new Set();  //set - lze vlozit jen unikatni keys
-  queue.push(start);
+  queue.push(start,0);
+  queue.length();
   resultsArray.set(start, [0, null]);
 
-  while (queue.length > 0 ) {
+  while (queue.length() > 0 ) {
+    debugger;
     const junction = queue.shift();
-    visited.add(junction);
-    const paths = graph.get(junction);
+    visited.add(junction[0]);
+    const paths = graph.get(junction[0]);
     for(let path of paths)   {
       const before = resultsArray.get(path[0])[0];
       const after = path[1] + resultsArray.get(junction)[0];
+      console.log( before, after)
       if (after < before) {
         resultsArray.set(path[0], [after,junction])
       }
      if(!visited.has(path[0])) {
-       queue.push(path[0]);
+       queue.push(path[0], resultsArray.get(path[0])[0]);
+
      }
     }
   }
@@ -75,4 +116,4 @@ function findPath(start, end) {
   console.log("Time consumption is " + resultsArray.get(end)[0] + " hrs");
 }
 
-findPath("S", "G");
+findPath("S", "A");
